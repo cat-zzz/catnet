@@ -16,169 +16,187 @@
 #include <list>
 #include <fstream>
 #include <vector>
-#include <sstream>
+#include <functional>
 #include <iostream>
+#include <map>
+#include <sstream>
 
 namespace catnet {
-    class LogEvent {
-    public:
-        typedef std::shared_ptr<LogEvent> ptr;
+	class Logger;
 
-        LogEvent();
+	class LogEvent {
+	public:
+		typedef std::shared_ptr<LogEvent> ptr;
 
-        const char *getMFile() const {
-            return m_file;
-        }
+		LogEvent(const char *file, int32_t line, uint32_t elapse,
+			uint32_t thread_id, uint32_t fiber_id, uint64_t time);
 
-        int32_t getMLine() const {
-            return m_line;
-        }
+		LogEvent();
 
-        uint32_t getMElapse() const {
-            return m_elapse;
-        }
+		const char *getMFile() const {
+			return m_file;
+		}
 
-        uint32_t getMThreadId() const {
-            return m_threadId;
-        }
+		int32_t getMLine() const {
+			return m_line;
+		}
 
-        uint32_t getMFiberId() const {
-            return m_fiberId;
-        }
+		uint32_t getMElapse() const {
+			return m_elapse;
+		}
 
-        uint64_t getMTime() const {
-            return m_time;
-        }
+		uint32_t getMThreadId() const {
+			return m_threadId;
+		}
 
-        const std::string &getMContent() const {
-            return m_content;
-        }
+		uint32_t getMFiberId() const {
+			return m_fiberId;
+		}
 
-    private:
-        const char *m_file = nullptr;   // 文件名
-        int32_t m_line = 0;             // 行号
-        uint32_t m_elapse = 0;          // 程序开始运行到现在的毫秒数
-        uint32_t m_threadId = 0;        // 线程id
-        uint32_t m_fiberId = 0;         // 协程id
-        uint64_t m_time = 0;            // 时间戳
-        std::string m_content;
-    };
+		uint64_t getMTime() const {
+			return m_time;
+		}
 
-    // 日志级别
-    class LogLevel {
-    public:
-        enum Level {
-            UNKNOWN=0,
-            DEBUG = 1,
-            INFO = 2,
-            WARN = 3,
-            ERROR = 4,
-            FATAL = 5
-        };
+		std::string getMContent() const {
+			return m_content.str();
+		}
 
-        static const char *toString(LogLevel::Level level);
-    };
+	private:
+		const char *m_file = nullptr;   // 文件名
+		int32_t m_line = 0;             // 行号
+		uint32_t m_elapse = 0;          // 程序开始运行到现在的毫秒数
+		uint32_t m_threadId = 0;        // 线程id
+		uint32_t m_fiberId = 0;         // 协程id
+		uint64_t m_time = 0;            // 时间戳
+		std::stringstream m_content;
+	};
 
-    // 日志格式器
-    class LogFormatter {
-    public:
-        typedef std::shared_ptr<LogFormatter> ptr;
+	// 日志级别
+	class LogLevel {
+	public:
+		enum Level {
+			UNKNOWN = 0,
+			DEBUG = 1,
+			INFO = 2,
+			WARN = 3,
+			ERROR = 4,
+			FATAL = 5
+		};
 
-        LogFormatter(const std::string &pattern);
+		static const char *toString(LogLevel::Level level);
+	};
 
-        std::string format(LogLevel::Level level, LogEvent::ptr event);
+	// 日志格式器
+	class LogFormatter {
+	public:
+		// todo 学习语法：shared_ptr, shared_ptr.reset()
+		typedef std::shared_ptr<LogFormatter> ptr;
 
-    public:
-        class FormatItem {
-        public:
-            typedef std::shared_ptr<FormatItem> ptr;
+		LogFormatter(const std::string &pattern);
 
-            virtual ~FormatItem() {}
+		std::string format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
 
-            virtual void format(std::ostream& os,LogLevel::Level level, LogEvent::ptr event) = 0;  // "=0"表示纯虚函数
-        };
+		class FormatItem {
+		public:
+			typedef std::shared_ptr<FormatItem> ptr;
 
-        void init();
-    private:
-        std::string m_pattern;
-        std::vector<FormatItem::ptr> m_items;
-    };
+			FormatItem(const std::string &fmt = "") {
+			};
 
-    // 日志输出地
-    class LogAppender {
-    public:
-        typedef std::shared_ptr<LogAppender> ptr;
+			virtual ~FormatItem() {
+			}
 
-        virtual ~LogAppender() {}
+			virtual void format(std::ostream &os, std::shared_ptr<Logger> logger, LogLevel::Level level,
+								LogEvent::ptr event) = 0;  // "=0"表示纯虚函数
+		};
 
-        virtual void log(LogLevel::Level level, LogEvent::ptr event);
+		void init();
 
-        void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
+	private:
+		std::string m_pattern;
+		std::vector<FormatItem::ptr> m_items;
+	};
 
-        LogFormatter::ptr getFormatter() const { return m_formatter; }
+	// 日志输出地
+	class LogAppender {
+	public:
+		typedef std::shared_ptr<LogAppender> ptr;
 
-    protected:
-        LogLevel::Level m_level;
-        LogFormatter::ptr m_formatter;
-    };
+		virtual ~LogAppender() {
+		}
+
+		virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) =0;
+
+		void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
+
+		LogFormatter::ptr getFormatter() const { return m_formatter; }
+
+	protected:
+		LogLevel::Level m_level;
+		LogFormatter::ptr m_formatter;
+	};
 
 
-    // 日志器
-    class Logger {
-    public:
-        typedef std::shared_ptr<Logger> ptr;
+	// 日志器
+	class Logger : public std::enable_shared_from_this<Logger> {
+	public:
+		typedef std::shared_ptr<Logger> ptr;
 
 
-        Logger(const std::string &name = "root");
+		Logger(const std::string &name = "root");
 
-        void log(LogLevel::Level level, LogEvent::ptr event);
+		void log(LogLevel::Level level, LogEvent::ptr event);
 
-        void debug(LogEvent::ptr event);
+		void debug(LogEvent::ptr event);
 
-        void info(LogEvent::ptr event);
+		void info(LogEvent::ptr event);
 
-        void warn(LogEvent::ptr event);
+		void warn(LogEvent::ptr event);
 
-        void error(LogEvent::ptr event);
+		void error(LogEvent::ptr event);
 
-        void fatal(LogEvent::ptr event);
+		void fatal(LogEvent::ptr event);
 
-        void addAppender(LogAppender::ptr appender);
+		void addAppender(LogAppender::ptr appender);
 
-        void delAppender(LogAppender::ptr appender);
+		void delAppender(LogAppender::ptr appender);
 
-        LogLevel::Level getLevel() const { return m_level; }
+		LogLevel::Level getMLevel() const { return m_level; }
 
-        void setLevel(LogLevel::Level val) { m_level = val; }
+		void setMLevel(LogLevel::Level val) { m_level = val; }
 
-    private:
-        std::string m_name;
-        LogLevel::Level m_level;
-        std::list<LogAppender::ptr> m_appender_list;   // Appender集合
-    };
+		std::string getMName() const {
+			return m_name;
+		}
 
-    // 输出到控制台的Appender
-    class StdoutLogAppender : public LogAppender {
-    public:
-        typedef std::shared_ptr<StdoutLogAppender> ptr;
+	private:
+		std::string m_name;         // 日志名称
+		LogLevel::Level m_level;    // 日志级别
+		std::list<LogAppender::ptr> m_appender_list;   // Appender集合
+		LogFormatter::ptr m_formatter;
+	};
 
-        void log(LogLevel::Level level, LogEvent::ptr event) override;  // override表示从父类继承出来的重写的实现
-    private:
-    };
+	// 输出到控制台的Appender
+	class StdoutLogAppender : public LogAppender {
+	public:
+		typedef std::shared_ptr<StdoutLogAppender> ptr;
 
-    // 输出到文件的Appender
-    class FileLogAppender : public LogAppender {
-    public:
-        typedef std::shared_ptr<FileLogAppender> ptr;
+		void log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override;  // override表示从父类继承出来的重写的实现
+	};
 
-        FileLogAppender(const std::string &filename);
+	// 输出到文件的Appender
+	class FileLogAppender : public LogAppender {
+	public:
+		typedef std::shared_ptr<FileLogAppender> ptr;
 
-        void log(LogLevel::Level level, LogEvent::ptr event) override;
+		FileLogAppender(const std::string &filename);
 
-        bool reopen();  // 重新打开文件
-    private:
-        std::string m_filename;
-        std::ofstream m_filestream;
-    };
+		void log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override;
+
+		bool reopen();  // 重新打开文件
+	private:
+		std::string m_filename;
+		std::ofstream m_filestream;
+	};
 }
 #endif //CATNET_LOG_H

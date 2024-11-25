@@ -3,7 +3,13 @@ project(catnet)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(catnet src/main.cpp
-        src/log/log.h
-        src/log/log.cpp
-)
+# 添加头文件和源文件所在目录到include路径
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+# 自动查找src目录中的所有源文件
+file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
+
+# 打印找到的源文件（调试用，可选操作）
+message(STATUS "Source files: ${SOURCES}")
+#add_executable(catnet ${SOURCES})
+add_executable(test_log test/test_log.cpp ${SOURCES})
