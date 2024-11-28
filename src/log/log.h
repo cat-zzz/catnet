@@ -115,6 +115,7 @@ namespace catnet {
 	private:
 		std::string m_pattern;
 		std::vector<FormatItem::ptr> m_items;
+		bool m_error=false;
 	};
 
 	// 日志输出地

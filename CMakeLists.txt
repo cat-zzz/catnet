@@ -12,4 +12,6 @@ file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 # 打印找到的源文件（调试用，可选操作）
 message(STATUS "Source files: ${SOURCES}")
 #add_executable(catnet ${SOURCES})
-add_executable(test_log test/test_log.cpp ${SOURCES})
+add_executable(test_log test/test_log.cpp ${SOURCES}
+        src/log2/log.h
+        src/log2/log.cpp)
