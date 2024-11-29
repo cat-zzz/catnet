@@ -6,17 +6,23 @@
 * @author: GQL
 * @email: babygql@qq.com
 **************************/
-#include <ctime>
 
-#include"../src/log/log.h"
+#include <iostream>
+
+#include"../src/log2/log.h"
+
+// std::ostream &operator<<(std::ostream & lhs, const catnet::Logger & rhs) {
+//     lhs<<"logger";
+//     return lhs;
+// }
+
 int main() {
-    std::cout << "Hello Catnet!"<<std::endl;
-    // todo 学习语法，通过shared_ptr创建示例
-    catnet::Logger::ptr logger(new catnet::Logger);
-    catnet::LogAppender::ptr appender=catnet::LogAppender::ptr(new catnet::StdoutLogAppender);
-
-    logger->addAppender(appender);
-    catnet::LogEvent::ptr event(new catnet::LogEvent(__FILE__, __LINE__, 0,1,2,time(nullptr)));
-    logger->log(catnet::LogLevel::DEBUG, event);
-    return 0;
+	catnet::Logger::ptr logger(new catnet::Logger("ROOT"));
+	logger->setLevel(catnet::LogLevel::DEBUG);
+	CATNET_LOG_INFO(logger) << "Hello World!";
+	CATNET_LOG_DEBUG(logger) << "1111111111";
+	CATNET_LOG_ERROR(logger) << "2222222222";
+	CATNET_LOG_ERROR(logger) << "3333333333";
+	CATNET_LOG_ERROR(logger) << "44444444444";
+	return 0;
 }

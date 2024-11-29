@@ -8,10 +8,27 @@
 **************************/
 #include "log.h"
 
+#include <iostream>
+
 namespace catnet {
-Logger::Logger(const std::string &name): m_name(name), m_level(LogLevel::Level::INFO) {
+const char *LogLevel::toString(const Level level) {
+	switch (level) {
+#define XX(name) case name: return #name;
+		XX(DEBUG);
+		XX(INFO);
+		XX(WARN);
+		XX(ERROR);
+		XX(FATAL);
+#undef XX
+		default:
+			return "UNKNOWN LEVEL";
+	}
 }
 
-Logger::~Logger() {
+void Logger::log() {
+	std::cout << "[" << m_name << "]    "
+			<< "[" << LogLevel::toString(m_level) << "]    "
+			<< m_stream.str() << std::endl;
+	m_stream.str("");	// 清空输出流中的内容，防止重复输出
 }
 }
