@@ -9,12 +9,13 @@
 
 #ifndef LOG_H
 #define LOG_H
+
 #include <memory>
 #include <string>
 #include <sstream>
 
 #define CATNET_LOG_LEVEL(logger, level) \
-	if(level>=logger->getLevel()) catnet::LogWrap(logger).getLogger()->getStream()
+    if(level>=logger->getLevel()) catnet::LogWrap(logger).getLogger()->getStream()
 
 #define CATNET_LOG_DEBUG(logger) CATNET_LOG_LEVEL(logger,catnet::LogLevel::DEBUG)
 #define CATNET_LOG_INFO(logger) CATNET_LOG_LEVEL(logger,catnet::LogLevel::INFO)
@@ -25,57 +26,115 @@
 namespace catnet {
 class LogLevel {
 public:
-	enum Level { DEBUG, INFO, WARN, ERROR, FATAL, UNKNOWN };
-
-	/**
-	* 返回值为char*而不是std::string，因为printf()的形参%s为char*
-	*/
-	static const char *toString(Level level);
+    enum Level {
+        DEBUG, INFO, WARN, ERROR, FATAL, UNKNOWN
+    };
+    
+    /**
+    * 返回值为char*而不是std::string，因为printf()的形参%s为char*类型
+    */
+    static const char *toString(Level level);
 };
 
-class Logger {
+class LogEvent {
 public:
-	typedef std::shared_ptr<Logger> ptr;
-
-	explicit Logger(std::string name): m_name(std::move(name)), m_level(LogLevel::Level::INFO) {
-	}
-
-	~Logger() = default;
-
-	[[nodiscard]] const std::string& getName() const { return m_name; }
-
-	[[nodiscard]] LogLevel::Level getLevel() const { return m_level; }
-
-	void setLevel(const LogLevel::Level level) { m_level = level; }
-
-	[[nodiscard]] std::stringstream& getStream() {
-		return m_stream;
-	}
-
-	void log();
+    LogEvent(const char *mFile, int32_t mLine, int32_t mElapse, int32_t mThreadId, int32_t mFiberId,
+             uint64_t mTimestamp, LogLevel::Level mLevel, std::stringstream& mContent)
+            : m_file(mFile), m_line(mLine), m_elapse(mElapse),
+              m_thread_id(mThreadId), m_fiber_id(mFiberId),
+              m_timestamp(mTimestamp), m_level(mLevel), m_content(mContent) {}
+    
+    const char *getFile() const {
+        return m_file;
+    }
+    
+    int32_t getLine() const {
+        return m_line;
+    }
+    
+    int32_t getElapse() const {
+        return m_elapse;
+    }
+    
+    int32_t getThreadId() const {
+        return m_thread_id;
+    }
+    
+    int32_t getFiberId() const {
+        return m_fiber_id;
+    }
+    
+    uint64_t getTimestamp() const {
+        return m_timestamp;
+    }
+    
+    LogLevel::Level getLevel() const {
+        return m_level;
+    }
+    
+    std::stringstream& getContent() const {
+        return m_content;
+    }
 
 private:
-	std::string m_name;
-	LogLevel::Level m_level;
-	std::stringstream m_stream;
+    const char *m_file = nullptr;
+    int32_t m_line = 0;
+    int32_t m_elapse = 0;     // 程序从启动开始到现在的毫秒数
+    int32_t m_thread_id = 0;
+    int32_t m_fiber_id = 0;
+    uint64_t m_timestamp = 0;
+    LogLevel::Level m_level;
+    std::stringstream& m_content;
+};
+
+class LogFormatter{
+public:
+private:
+
+};
+class Logger {
+public:
+    typedef std::shared_ptr<Logger> ptr;
+    
+    explicit Logger(std::string name) : m_name(std::move(name)), m_level(LogLevel::Level::INFO) {
+    }
+    
+    ~Logger() = default;
+    
+    [[nodiscard]] const std::string& getName() const { return m_name; }
+    
+    [[nodiscard]] LogLevel::Level getLevel() const { return m_level; }
+    
+    void setLevel(const LogLevel::Level level) { m_level = level; }
+    
+    [[nodiscard]] std::stringstream& getStream() {
+        return m_stream;
+    }
+    
+    void log();
+
+private:
+    std::string m_name;
+    LogLevel::Level m_level;
+    std::stringstream m_stream;
 };
 
 class LogWrap {
 public:
-	explicit LogWrap(Logger::ptr& logger)
-		: m_logger(logger) {
-	}
-
-	~LogWrap() {
-		m_logger->log();
-	}
-
-	[[nodiscard]] Logger::ptr getLogger() const {
-		return m_logger;
-	}
+    explicit LogWrap(Logger::ptr& logger)
+            : m_logger(logger) {
+    }
+    
+    ~LogWrap() {
+        m_logger->log();
+    }
+    
+    [[nodiscard]] Logger::ptr getLogger() const {
+        return m_logger;
+    }
 
 private:
-	Logger::ptr m_logger;
+    Logger::ptr m_logger;
 };
 }// namespace catnet
 
