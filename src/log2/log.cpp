@@ -9,27 +9,28 @@
 #include "log.h"
 
 #include <iostream>
+#include <regex>
 
 namespace catnet {
 const char *LogLevel::toString(const Level level) {
-	switch (level) {
+    switch (level) {
 #define XX(name) case name: return #name;
-		XX(DEBUG);
-		XX(INFO);
-		XX(WARN);
-		XX(ERROR);
-		XX(FATAL);
+        XX(DEBUG);
+        XX(INFO);
+        XX(WARN);
+        XX(ERROR);
+        XX(FATAL);
 #undef XX
-		default:
-			return "UNKNOWN LEVEL";
-	}
+        default:
+            return "UNKNOWN LEVEL";
+    }
 }
 
 void Logger::log() {
-	std::cout << "[" << m_name << "]    "
-			<< "[" << LogLevel::toString(m_level) << "]    "
-			<< m_stream.str() << std::endl;
-	m_stream.str("");	// 清空输出流中的内容，防止重复输出
+    std::cout << "[" << m_name << "]    "
+              << "[" << LogLevel::toString(m_level) << "]    "
+              << m_stream.str() << std::endl;
+    m_stream.str("");    // 清空输出流中的内容，防止重复输出
 }
 // 属性
 // log_appender_list: 日志输出地
@@ -47,10 +48,48 @@ void Logger::log() {
  */
 
 
-void log(LogLevel, LogEvent){
+void log(LogLevel, LogEvent) {
 
 }
-void debug(LogEvent){
 
+void debug(LogEvent) {
+
+}
+
+void LogFormatter::pattern(const std::string& format_str) {
+    if (!format_str.empty()) {
+        m_format_str = format_str;
+    }
+//    std::string temp = m_format_str;
+//    std::regex format_regex("%[a-zA-Z%]");
+//    std::smatch matches;
+//    std::cout << "original format_str: " << m_format_str << std::endl;
+    
+//    std::string::const_iterator start_iter = m_format_str.cbegin();
+//    while (std::regex_search(start_iter, m_format_str.cend(), matches, format_regex)) {
+//        start_iter = matches[0].second;
+//        std::cout << matches[1] << "found: " << matches[0] << std::endl;
+//    }
+//    while (std::regex_search(temp, matches, format_regex)) {
+//        std::cout << "Found: " << matches[0] << std::endl;
+//        temp = matches.suffix().str();
+//        std::cout << "temp: " << temp << std::endl;
+//    }
+    std::vector<std::string> result;
+    
+    // 定义正则表达式：匹配%及其之后的一个英文字母，或%及其之后任意一个字符，或其他子字符穿串
+    // "%% %[ "将被划分为"%%"，" "，"%["，" "，而不是"%%"，" %[ "
+    std::regex pattern(R"((%[a-zA-Z%])|(%[^a-zA-Z%])|([^%]+))");
+    
+    // 使用 std::sregex_iterator 查找所有匹配项
+    auto begin = std::sregex_iterator(m_format_str.begin(), m_format_str.end(), pattern);
+    auto end = std::sregex_iterator();
+    
+    // 遍历匹配结果，并将其存储在 result 中
+    for (auto it = begin; it != end; ++it) {
+        result.push_back(it->str());
+        std::cout << it->str() << std::endl;
+    }
+    
 }
 }

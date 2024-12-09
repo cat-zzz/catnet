@@ -87,11 +87,42 @@ private:
     std::stringstream& m_content;
 };
 
-class LogFormatter{
+class FormatItem {
 public:
+    typedef std::shared_ptr<FormatItem> ptr;
+    
+    virtual ~FormatItem() = default;
+
+protected:
+    std::string m_format;
+};
+
+class MessageFormatItem : public FormatItem {
+void func(){
+    m_format;
+}
+};
+
+class LogFormatter {
+public:
+    typedef std::shared_ptr<LogFormatter> ptr;
+    
+    explicit LogFormatter(const std::string& format_str) : m_format_str(format_str) {}
+    
+    void pattern(const std::string& format_str = "");
+
 private:
+    std::string m_format_str;  // 格式化字符串
+};
+
+class LogAppender {
 
 };
+
+class StdoutLogAppender : LogAppender {
+
+};
+
 class Logger {
 public:
     typedef std::shared_ptr<Logger> ptr;
@@ -136,6 +167,7 @@ public:
 private:
     Logger::ptr m_logger;
 };
+
 }// namespace catnet
 
 #endif// LOG_H
