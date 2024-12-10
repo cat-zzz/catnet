@@ -15,3 +15,7 @@ message(STATUS "Source files: ${SOURCES}")
 add_executable(test_log test/test_log.cpp ${SOURCES}
         src/log2/log.h)
 add_executable(test_env test/test_env.cpp ${SOURCES})
+add_executable(test_crtp test/test_crtp/test_crtp.cpp test/test_crtp/animal.h
+        test/test_crtp/animal2.h
+        )
+add_executable(test_crtp2 test/test_crtp/test_crtp2.cpp)
