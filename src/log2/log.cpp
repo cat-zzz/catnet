@@ -70,7 +70,7 @@ void LogFormatter::pattern(const std::string& format_str) {
 		// m_items.push_back(it->str());
 		switch (it->str()) {
 #define XX(str, C) \
-	{case #str: [](){};break;}
+	{case #str: [](){return };break;}
 #undef XX
 			case "%d": break;
 			case "%p": break;
@@ -78,4 +78,23 @@ void LogFormatter::pattern(const std::string& format_str) {
 		}
 	}
 }
+}
+
+FormatItemFactory& FormatItemFactory::getInstance() {
+	static FormatItemFactory factory;
+	return factory;
+}
+
+std::shared_ptr<catnet::FormatItem> FormatItemFactory::create_format_item(const std::string& format) {
+	switch (format) {
+		case "%d":
+			// catnet::DateTimeFormatItem a= catnet::DateTimeFormatItem();
+			return std::make_shared<catnet::DateTimeFormatItem>();
+		case "%p":
+			return std::make_shared<catnet::LevelFormatItem>();
+		case "%c":
+			return std::make_shared<catnet::LoggerNameFormatItem>();
+		default:
+			return nullptr;
+	}
 }

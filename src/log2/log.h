@@ -100,7 +100,7 @@ class FormatItem {
 public:
 	typedef std::shared_ptr<FormatItem> ptr;
 
-	explicit FormatItem(const std::string &format)
+	explicit FormatItem(const std::string& format)
 		: m_format(format) {
 	}
 
@@ -112,17 +112,36 @@ protected:
 	const std::string m_format;
 };
 
+/**
+ * 日志消息格式化项
+ */
 class MessageFormatItem final : public FormatItem {
 public:
-	MessageFormatItem(): FormatItem("") {
+	MessageFormatItem(): FormatItem("%m") {
 	}
+};
 
-private:
+/**
+ * 日志级别格式化项
+ */
+class LevelFormatItem final : public FormatItem {
+public:
+	LevelFormatItem(): FormatItem("%p") {
+	}
+};
+
+/**
+ * 时间格式化项
+ */
+class DateTimeFormatItem final : public FormatItem {
+public:
+	DateTimeFormatItem(): FormatItem("%d") {
+	}
 };
 
 class LoggerNameFormatItem final : public FormatItem {
 public:
-	LoggerNameFormatItem():FormatItem("") {
+	LoggerNameFormatItem(): FormatItem("%c") {
 	}
 };
 
@@ -147,10 +166,9 @@ public:
 	 */
 	void pattern(const std::string& format_str = "");
 
-
 private:
 	/*
-	 * 在初始化时需要确定好输出格式，即在构造函数中确定m_format_str和m_items的内容
+	 * 在初始化的同时需要确定好输出格式，即在构造函数中确定m_format_str和m_items的内容
 	 */
 	std::string m_format_str;  // 格式化字符串
 	std::vector<FormatItem> m_items;	// 按顺序存储格式化字符串的每一项，输出时按照m_items元素顺序逐个输出
@@ -208,4 +226,17 @@ private:
 };
 }// namespace catnet
 
+class FormatItemFactory {
+public:
+	static FormatItemFactory& getInstance();
+
+	FormatItemFactory(const FormatItemFactory&) = delete;
+
+	FormatItemFactory& operator=(const FormatItemFactory&) = delete;
+
+	std::shared_ptr<catnet::FormatItem> create_format_item(const std::string& format);
+
+private:
+	FormatItemFactory() = default;
+};
 #endif// LOG_H
