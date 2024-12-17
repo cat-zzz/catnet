@@ -47,10 +47,9 @@ void test1() {
 	const char *format_temp = "%d [%p] %f-%l %m %[ %%";
 	catnet::LogFormatter::ptr formatter(new catnet::LogFormatter(format_temp));
 	formatter->pattern();
-	// std::cout<<formatter->getItems();
 	std::cout << "func test1() formatter:" << format_temp << std::endl;
 	for (const auto& item: formatter->getItems()) {
-		std::cout << item << std::endl;
+		std::cout << *item << std::endl;
 	}
 }
 

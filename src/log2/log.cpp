@@ -68,16 +68,11 @@ void LogFormatter::pattern(const std::string& format_str) {
 	// 遍历匹配结果，并将其存储在m_items中
 	for (auto it = begin; it != end; ++it) {
 		// m_items.push_back(it->str());
-		switch (it->str()) {
-#define XX(str, C) \
-	{case #str: [](){return };break;}
-#undef XX
-			case "%d": break;
-			case "%p": break;
-			default: break;
-		}
+		std::cout << it->str() << std::endl;
+		// FormatItemFactory& format_item_factory = FormatItemFactory::getInstance();
+		auto item = FormatItemFactory::create_format_item(it->str());
+		m_items.push_back(item);
 	}
-}
 }
 
 FormatItemFactory& FormatItemFactory::getInstance() {
@@ -85,16 +80,26 @@ FormatItemFactory& FormatItemFactory::getInstance() {
 	return factory;
 }
 
-std::shared_ptr<catnet::FormatItem> FormatItemFactory::create_format_item(const std::string& format) {
-	switch (format) {
-		case "%d":
-			// catnet::DateTimeFormatItem a= catnet::DateTimeFormatItem();
-			return std::make_shared<catnet::DateTimeFormatItem>();
-		case "%p":
-			return std::make_shared<catnet::LevelFormatItem>();
-		case "%c":
-			return std::make_shared<catnet::LoggerNameFormatItem>();
-		default:
-			return nullptr;
+std::shared_ptr<FormatItem> FormatItemFactory::create_format_item(const std::string& format) {
+	if (format == "%d") {
+		return std::make_shared<DateTimeFormatItem>();
 	}
+	if (format == "%p") {
+		return std::make_shared<LevelFormatItem>();
+	}
+	if (format == "%c") {
+		return std::make_shared<LoggerNameFormatItem>();
+	}
+	if (format == "%m") {
+		return std::make_shared<MessageFormatItem>();
+	}
+	// 如果不是上述的格式化项，就当作普通字符串处理
+	return std::make_shared<StringFormatItem>(format);
+}
+
+std::ostream& operator<<(std::ostream & os, const FormatItem & item) {
+	os<<typeid(item).name()<<"  "<<item.getFormat();
+	return os;
+}
+
 }

@@ -96,12 +96,21 @@ private:
 	std::stringstream& m_content;
 };
 
+/**
+ * 关于格式化项的说明：只有%加一英文字符（大小写均可）的字符串才能算作一种格式化项，例如%s, %d
+ *
+ * 其他情况均算作普通字符串，直接进行输出
+ */
 class FormatItem {
 public:
 	typedef std::shared_ptr<FormatItem> ptr;
 
 	explicit FormatItem(const std::string& format)
 		: m_format(format) {
+	}
+
+	[[nodiscard]] std::string getFormat() const {
+		return m_format;
 	}
 
 	// 当基类拥有虚函数，并且希望确保派生类可以被正确删除时，基类的虚构函数应该是虚拟的
@@ -145,6 +154,15 @@ public:
 	}
 };
 
+/**
+ * StringFormatItem中的m_format是普通字符串，非格式化项
+ */
+class StringFormatItem final : public FormatItem {
+public:
+	explicit StringFormatItem(const std::string& format): FormatItem(format) {
+	}
+};
+
 class LogFormatter {
 public:
 	typedef std::shared_ptr<LogFormatter> ptr;
@@ -156,7 +174,7 @@ public:
 		return m_format_str;
 	}
 
-	[[nodiscard]] std::vector<FormatItem> getItems() const {
+	[[nodiscard]] std::vector<std::shared_ptr<FormatItem>> getItems() const {
 		return m_items;
 	}
 
@@ -171,7 +189,7 @@ private:
 	 * 在初始化的同时需要确定好输出格式，即在构造函数中确定m_format_str和m_items的内容
 	 */
 	std::string m_format_str;  // 格式化字符串
-	std::vector<FormatItem> m_items;	// 按顺序存储格式化字符串的每一项，输出时按照m_items元素顺序逐个输出
+	std::vector<std::shared_ptr<FormatItem>> m_items;	// 按顺序存储格式化字符串的每一项，输出时按照m_items元素顺序逐个输出
 };
 
 class LogAppender {
@@ -224,7 +242,6 @@ public:
 private:
 	Logger::ptr m_logger;
 };
-}// namespace catnet
 
 class FormatItemFactory {
 public:
@@ -234,9 +251,13 @@ public:
 
 	FormatItemFactory& operator=(const FormatItemFactory&) = delete;
 
-	std::shared_ptr<catnet::FormatItem> create_format_item(const std::string& format);
+	static std::shared_ptr<FormatItem> create_format_item(const std::string& format);
 
 private:
 	FormatItemFactory() = default;
 };
+
+std::ostream& operator<<(std::ostream & os, const FormatItem & item);
+}// namespace catnet
+
 #endif// LOG_H
