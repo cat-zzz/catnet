@@ -14,6 +14,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <mutex>
 
 #define CATNET_LOG_LEVEL(logger, level) \
     if(level>=logger->getLevel()) catnet::LogWrap(logger).getLogger()->getStream()
@@ -174,7 +175,7 @@ public:
 		return m_format_str;
 	}
 
-	[[nodiscard]] std::vector<std::shared_ptr<FormatItem>> getItems() const {
+	[[nodiscard]] std::vector<std::shared_ptr<FormatItem> > getItems() const {
 		return m_items;
 	}
 
@@ -189,10 +190,12 @@ private:
 	 * 在初始化的同时需要确定好输出格式，即在构造函数中确定m_format_str和m_items的内容
 	 */
 	std::string m_format_str;  // 格式化字符串
-	std::vector<std::shared_ptr<FormatItem>> m_items;	// 按顺序存储格式化字符串的每一项，输出时按照m_items元素顺序逐个输出
+	std::vector<std::shared_ptr<FormatItem> > m_items;	// 按顺序存储格式化字符串的每一项，输出时按照m_items元素顺序逐个输出
 };
 
 class LogAppender {
+protected:
+	std::SpinLock a;
 };
 
 class StdoutLogAppender : LogAppender {
@@ -257,7 +260,7 @@ private:
 	FormatItemFactory() = default;
 };
 
-std::ostream& operator<<(std::ostream & os, const FormatItem & item);
+std::ostream& operator<<(std::ostream& os, const FormatItem& item);
 }// namespace catnet
 
 #endif// LOG_H

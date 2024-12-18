@@ -97,9 +97,8 @@ std::shared_ptr<FormatItem> FormatItemFactory::create_format_item(const std::str
 	return std::make_shared<StringFormatItem>(format);
 }
 
-std::ostream& operator<<(std::ostream & os, const FormatItem & item) {
-	os<<typeid(item).name()<<"  "<<item.getFormat();
+std::ostream& operator<<(std::ostream& os, const FormatItem& item) {
+	os << typeid(item).name() << "  " << item.getFormat();
 	return os;
 }
-
 }
